@@ -294,14 +294,19 @@ class MainHandler(tornado.web.RequestHandler):
                     }))
                 return
 
-
-
-
+class UserInfoHandler(tornado.web.RequestHandler):
+    def get(self):
+        username = self.get_secure_cookie("user")
+        if username:
+            self.write(json.dumps({"code": 200, "username": username.decode()}))
+        else:
+            self.write(json.dumps({"code": 401, "msg": "未登录"}))
 
 def make_app():
     return tornado.web.Application([
         (r"/", MainHandler),
         (r"/login", LoginHandler),
+        (r"/user/info", UserInfoHandler),
         (r"/static/(.*)", StaticFileHandler, {"path": "static"}),
     ], 
     template_path="templates",

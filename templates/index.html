@@ -7,7 +7,6 @@
     <link href="/static/css/layui.css" rel="stylesheet">
     <script src="/static/jquery-3.2.1.min.js"></script>
     <script src="/static/layui.all.js"></script>
-    <script src="/static/jquery.cookie.js"></script>
 </head>
 
 <body>
@@ -108,20 +107,53 @@
     <script src="/static/jquery-3.2.1.min.js"></script>
 
     <script type="text/javascript">
+        // Cookie操作函数
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+            return null;
+        }
+        
+        function deleteCookie(name) {
+            document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+        }
 
+        layui.use(['element', 'layer', 'form'], function(){
+            var element = layui.element;
+            var layer = layui.layer;
+            var form = layui.form;
+            
+            // 显示用户名
+            var username = getCookie('user');
+            if(username) {
+                $('#username').text(username);
+            }
+            
+            // 为用户图标添加点击事件
+            $('.layui-nav-item a[href="javascript:;"]').click(function(){
+                layer.confirm('确定要退出登录吗？', {
+                    btn: ['确定','取消'],
+                    icon: 3,
+                    title: '提示'
+                }, function(index){
+                    deleteCookie('user');
+                    layer.msg('已退出登录', {
+                        icon: 1,
+                        time: 1000,
+                        shade: 0.3,
+                        shadeClose: true
+                    }, function(){
+                        window.location.href = '/login';
+                    });
+                    layer.close(index);
+                });
+            });
 
-        table = layui.table;
+            table = layui.table;
+            layui.form.render();
+        });
 
-
-layui.form.render()
-
-
-
-
-
-
-
-        layui.form.render()
         $("button").click(function () {
 
 
@@ -234,13 +266,9 @@ layui.layer.msg("完成评论!")
 
         });
 
-        // 显示用户名
-        var username = $.cookie('user');
-        $('#username').text(username);
-        
         // 退出登录
         $('#logout').click(function(){
-            $.removeCookie('user');
+            deleteCookie('user');
             window.location.href = '/login';
         });
 
