@@ -1,4 +1,3 @@
-
 import numpy as np
 import cv2
 from sklearn.cluster import KMeans
@@ -12,6 +11,8 @@ from PIL import Image
 import base64,json
 import traceback
 from io import BytesIO
+from models import Session, User
+import hashlib
 
 
 
@@ -203,12 +204,50 @@ if os.path.exists("right_as.json"):
 else:
     right_as = {}
 
+class LoginHandler(tornado.web.RequestHandler):
+    def get(self):
+        self.render("login.html")
+        
+    def post(self):
+        try:
+            username = self.get_argument("username")
+            password = self.get_argument("password")
+            hashed_password = hashlib.md5(password.encode()).hexdigest()
+            
+            session = Session()
+            user = session.query(User).filter_by(username=username).first()
+            
+            if user:
+                if user.password == hashed_password:
+                    self.set_secure_cookie("user", username)
+                    self.write(json.dumps({"code": 200, "msg": "登录成功"}))
+                else:
+                    self.write(json.dumps({"code": 400, "msg": "密码错误"}))
+            else:
+                # 创建新用户
+                new_user = User(username=username, password=hashed_password)
+                session.add(new_user)
+                session.commit()
+                self.set_secure_cookie("user", username)
+                self.write(json.dumps({"code": 200, "msg": "新用户创建成功"}))
+            
+            session.close()
+        except Exception as e:
+            print(f"Login error: {str(e)}")
+            self.write(json.dumps({"code": 500, "msg": "服务器错误"}))
+
 class MainHandler(tornado.web.RequestHandler):
     def get(self):
-        
+        if not self.get_secure_cookie("user"):
+            self.redirect("/login")
+            return
         self.render("index.html")
         
     def post(self):
+        if not self.get_secure_cookie("user"):
+            self.write(json.dumps({"code": 401, "msg": "请先登录"}))
+            return
+            
         if self.get_argument("method") =="com":
             img = Image.open(BytesIO(self.request.files['image'][0]['body']))
             img_rgb =  np.array(img)
@@ -260,25 +299,23 @@ class MainHandler(tornado.web.RequestHandler):
 
 
 def make_app():
-    template_path = "templates/"
-    static_path = "static/"
-
     return tornado.web.Application([
-    
         (r"/", MainHandler),
-
-    ], template_path=template_path, static_path=static_path, debug=True)
-
+        (r"/login", LoginHandler),
+        (r"/static/(.*)", StaticFileHandler, {"path": "static"}),
+    ], 
+    template_path="templates",
+    static_path="static",
+    cookie_secret="your-cookie-secret-here",
+    debug=True)
 
 def run_server(port=8000):
     tornado.options.parse_command_line()
     app = make_app()
     app.listen(port)
-    print("\n服务已启动 请打开 http://127.0.0.1:8000 ")
+    print(f"Server started on port {port}")
     tornado.ioloop.IOLoop.current().start()
 
-
 if __name__ == "__main__":
-   
     run_server()
     

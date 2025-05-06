@@ -19,8 +19,12 @@
         <div class="layui-container">
             <ul class="layui-nav fly-nav layui-hide-xs">
                 <li class="layui-nav-item"> <a href="/"><i class="iconfont icon-jiaoliu"></i>识别答题卡</a> </li>
-
-
+                <li class="layui-nav-item" style="float: right;">
+                    <a href="javascript:;"><i class="layui-icon layui-icon-username"></i> <span id="username"></span></a>
+                    <dl class="layui-nav-child">
+                        <dd><a href="javascript:;" id="logout">退出登录</a></dd>
+                    </dl>
+                </li>
             </ul>
 
         </div>
@@ -228,6 +232,16 @@ layui.layer.msg("完成评论!")
 
 
 
+        });
+
+        // 显示用户名
+        var username = $.cookie('user');
+        $('#username').text(username);
+        
+        // 退出登录
+        $('#logout').click(function(){
+            $.removeCookie('user');
+            window.location.href = '/login';
         });
 
     </script>
