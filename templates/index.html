@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>基于opencv的答题卡识别判卷--demo</title>
+    <title>答题卡识别判卷系统</title>
     <link href="/static/css/layui.css" rel="stylesheet">
     <script src="/static/jquery-3.2.1.min.js"></script>
     <script src="/static/layui.all.js"></script>
@@ -17,7 +17,25 @@
     <div class="fly-header layui-bg-black">
         <div class="layui-container">
             <ul class="layui-nav fly-nav layui-hide-xs">
-                <li class="layui-nav-item"> <a href="/"><i class="iconfont icon-jiaoliu"></i>识别答题卡</a> </li>
+                <li class="layui-nav-item"><a href="/"><i class="layui-icon layui-icon-camera"></i>识别答题卡</a></li>
+                <li class="layui-nav-item">
+                    <a href="javascript:;"><i class="layui-icon layui-icon-group"></i>班级管理</a>
+                    <dl class="layui-nav-child">
+                        <dd><a href="/class/manage">班级列表</a></dd>
+                        <dd><a href="/class/add">新建班级</a></dd>
+                        <dd><a href="/student/manage">学生管理</a></dd>
+                    </dl>
+                </li>
+                <li class="layui-nav-item">
+                    <a href="javascript:;"><i class="layui-icon layui-icon-form"></i>考试管理</a>
+                    <dl class="layui-nav-child">
+                        <dd><a href="/exam/manage">考试列表</a></dd>
+                        <dd><a href="/exam/add">新建考试</a></dd>
+                        <dd><a href="/exam/template">答题卡模板</a></dd>
+                        <dd><a href="/exam/score">成绩管理</a></dd>
+                        <dd><a href="/exam/query">成绩查询</a></dd>
+                    </dl>
+                </li>
                 <li class="layui-nav-item" style="float: right;">
                     <a href="javascript:;"><i class="layui-icon layui-icon-username"></i> <span id="username"></span></a>
                     <dl class="layui-nav-child">
@@ -131,8 +149,8 @@
                 $('#username').text("张老师");
             }
             
-            // 为用户图标添加点击事件
-            $('.layui-nav-item a[href="javascript:;"]').click(function(){
+            // 退出登录
+            $('#logout').click(function(){
                 layer.confirm('确定要退出登录吗？', {
                     btn: ['确定','取消'],
                     icon: 3,
@@ -150,6 +168,9 @@
                     layer.close(index);
                 });
             });
+
+            // 初始化导航菜单
+            element.init();
 
             table = layui.table;
             layui.form.render();
@@ -265,12 +286,6 @@ layui.layer.msg("完成评论!")
 
 
 
-        });
-
-        // 退出登录
-        $('#logout').click(function(){
-            deleteCookie('user');
-            window.location.href = '/login';
         });
 
     </script>

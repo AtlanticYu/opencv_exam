@@ -11,8 +11,9 @@ from PIL import Image
 import base64,json
 import traceback
 from io import BytesIO
-from models import Session, User
+from models import Session, User, Class, Student, Exam, ExamScore
 import hashlib
+from datetime import datetime
 
 
 
@@ -302,11 +303,102 @@ class UserInfoHandler(tornado.web.RequestHandler):
         else:
             self.write(json.dumps({"code": 401, "msg": "未登录"}))
 
+class ClassManageHandler(tornado.web.RequestHandler):
+    def get(self):
+        if not self.get_secure_cookie("user"):
+            self.redirect("/login")
+            return
+        self.render("class_manage.html")
+
+class ClassAddHandler(tornado.web.RequestHandler):
+    def get(self):
+        if not self.get_secure_cookie("user"):
+            self.redirect("/login")
+            return
+        self.render("class_add.html")
+
+class ClassListHandler(tornado.web.RequestHandler):
+    def get(self):
+        session = Session()
+        try:
+            classes = session.query(Class).all()
+            result = []
+            for c in classes:
+                student_count = session.query(Student).filter_by(class_id=c.class_id).count()
+                result.append({
+                    'class_id': c.class_id,
+                    'class_name': c.class_name,
+                    'class_code': c.class_code,
+                    'student_count': student_count,
+                    'created_at': c.created_at.strftime('%Y-%m-%d %H:%M:%S')
+                })
+            self.write(json.dumps({"code": 200, "data": result}))
+        except Exception as e:
+            self.write(json.dumps({"code": 500, "msg": str(e)}))
+        finally:
+            session.close()
+
+class ClassAddApiHandler(tornado.web.RequestHandler):
+    def post(self):
+        session = Session()
+        try:
+            class_name = self.get_argument("class_name")
+            class_code = self.get_argument("class_code")
+            
+            # 检查班级编号是否已存在
+            existing = session.query(Class).filter_by(class_code=class_code).first()
+            if existing:
+                self.write(json.dumps({"code": 400, "msg": "班级编号已存在"}))
+                return
+            
+            new_class = Class(
+                class_name=class_name,
+                class_code=class_code
+            )
+            session.add(new_class)
+            session.commit()
+            self.write(json.dumps({"code": 200, "msg": "添加成功"}))
+        except Exception as e:
+            session.rollback()
+            self.write(json.dumps({"code": 500, "msg": str(e)}))
+        finally:
+            session.close()
+
+class ClassDeleteHandler(tornado.web.RequestHandler):
+    def post(self):
+        session = Session()
+        try:
+            class_id = self.get_argument("class_id")
+            
+            # 检查是否有学生
+            student_count = session.query(Student).filter_by(class_id=class_id).count()
+            if student_count > 0:
+                self.write(json.dumps({"code": 400, "msg": "班级中还有学生，无法删除"}))
+                return
+            
+            class_obj = session.query(Class).filter_by(class_id=class_id).first()
+            if class_obj:
+                session.delete(class_obj)
+                session.commit()
+                self.write(json.dumps({"code": 200, "msg": "删除成功"}))
+            else:
+                self.write(json.dumps({"code": 404, "msg": "班级不存在"}))
+        except Exception as e:
+            session.rollback()
+            self.write(json.dumps({"code": 500, "msg": str(e)}))
+        finally:
+            session.close()
+
 def make_app():
     return tornado.web.Application([
         (r"/", MainHandler),
         (r"/login", LoginHandler),
         (r"/user/info", UserInfoHandler),
+        (r"/class/manage", ClassManageHandler),
+        (r"/class/add", ClassAddHandler),
+        (r"/api/class/list", ClassListHandler),
+        (r"/api/class/add", ClassAddApiHandler),
+        (r"/api/class/delete", ClassDeleteHandler),
         (r"/static/(.*)", StaticFileHandler, {"path": "static"}),
     ], 
     template_path="templates",

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>班级管理</title>
+    <link href="/static/css/layui.css" rel="stylesheet">
+    <script src="/static/jquery-3.2.1.min.js"></script>
+    <script src="/static/layui.all.js"></script>
+</head>
+<body>
+    <div class="fly-header layui-bg-black">
+        <div class="layui-container">
+            <ul class="layui-nav fly-nav layui-hide-xs">
+                <li class="layui-nav-item"><a href="/"><i class="layui-icon layui-icon-camera"></i>识别答题卡</a></li>
+                <li class="layui-nav-item layui-this">
+                    <a href="javascript:;"><i class="layui-icon layui-icon-group"></i>班级管理</a>
+                    <dl class="layui-nav-child">
+                        <dd class="layui-this"><a href="/class/manage">班级列表</a></dd>
+                        <dd><a href="/class/add">新建班级</a></dd>
+                        <dd><a href="/student/manage">学生管理</a></dd>
+                    </dl>
+                </li>
+                <li class="layui-nav-item">
+                    <a href="javascript:;"><i class="layui-icon layui-icon-form"></i>考试管理</a>
+                    <dl class="layui-nav-child">
+                        <dd><a href="/exam/manage">考试列表</a></dd>
+                        <dd><a href="/exam/add">新建考试</a></dd>
+                        <dd><a href="/exam/template">答题卡模板</a></dd>
+                        <dd><a href="/exam/score">成绩管理</a></dd>
+                        <dd><a href="/exam/query">成绩查询</a></dd>
+                    </dl>
+                </li>
+                <li class="layui-nav-item" style="float: right;">
+                    <a href="javascript:;"><i class="layui-icon layui-icon-username"></i> <span id="username"></span></a>
+                    <dl class="layui-nav-child">
+                        <dd><a href="javascript:;" id="logout">退出登录</a></dd>
+                    </dl>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="layui-container" style="margin-top: 10px;">
+        <div class="layui-card">
+            <div class="layui-card-header">
+                <span>班级列表</span>
+                <button class="layui-btn layui-btn-sm" style="float: right;" onclick="window.location.href='/class/add'">
+                    <i class="layui-icon layui-icon-add-1"></i> 新建班级
+                </button>
+            </div>
+            <div class="layui-card-body">
+                <table id="classTable" lay-filter="classTable"></table>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/html" id="toolbar">
+        <div class="layui-btn-container">
+            <button class="layui-btn layui-btn-sm" lay-event="add">添加学生</button>
+            <button class="layui-btn layui-btn-sm layui-btn-danger" lay-event="delete">删除班级</button>
+        </div>
+    </script>
+
+    <script>
+        layui.use(['table', 'layer'], function(){
+            var table = layui.table;
+            var layer = layui.layer;
+            
+            // 显示用户名
+            var username = getCookie('user');
+            if(username) {
+                $('#username').text(username);
+            }
+            
+            // 退出登录
+            $('#logout').click(function(){
+                deleteCookie('user');
+                window.location.href = '/login';
+            });
+
+            // 渲染表格
+            table.render({
+                elem: '#classTable',
+                url: '/api/class/list',
+                toolbar: '#toolbar',
+                cols: [[
+                    {field: 'class_id', title: 'ID', width: 80, sort: true},
+                    {field: 'class_name', title: '班级名称'},
+                    {field: 'class_code', title: '班级编号'},
+                    {field: 'student_count', title: '学生人数', width: 100},
+                    {field: 'created_at', title: '创建时间', width: 180},
+                    {title: '操作', width: 200, toolbar: '#toolbar'}
+                ]],
+                page: true
+            });
+
+            // 监听工具条
+            table.on('toolbar(classTable)', function(obj){
+                var checkStatus = table.checkStatus(obj.config.id);
+                switch(obj.event){
+                    case 'add':
+                        var data = checkStatus.data;
+                        if(data.length === 0){
+                            layer.msg('请选择班级');
+                            return;
+                        }
+                        window.location.href = '/student/add?class_id=' + data[0].class_id;
+                        break;
+                    case 'delete':
+                        var data = checkStatus.data;
+                        if(data.length === 0){
+                            layer.msg('请选择班级');
+                            return;
+                        }
+                        layer.confirm('确定删除该班级吗？', function(index){
+                            $.ajax({
+                                url: '/api/class/delete',
+                                type: 'POST',
+                                data: {class_id: data[0].class_id},
+                                success: function(res){
+                                    if(res.code === 200){
+                                        layer.msg('删除成功');
+                                        table.reload('classTable');
+                                    }else{
+                                        layer.msg(res.msg || '删除失败');
+                                    }
+                                }
+                            });
+                            layer.close(index);
+                        });
+                        break;
+                }
+            });
+        });
+
+        // Cookie操作函数
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+            return null;
+        }
+        
+        function deleteCookie(name) {
+            document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+        }
+    </script>
+</body>
+</html> 

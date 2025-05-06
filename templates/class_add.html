@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>新建班级</title>
+    <link href="/static/css/layui.css" rel="stylesheet">
+    <script src="/static/jquery-3.2.1.min.js"></script>
+    <script src="/static/layui.all.js"></script>
+</head>
+<body>
+    <div class="fly-header layui-bg-black">
+        <div class="layui-container">
+            <ul class="layui-nav fly-nav layui-hide-xs">
+                <li class="layui-nav-item"><a href="/"><i class="layui-icon layui-icon-camera"></i>识别答题卡</a></li>
+                <li class="layui-nav-item layui-this">
+                    <a href="javascript:;"><i class="layui-icon layui-icon-group"></i>班级管理</a>
+                    <dl class="layui-nav-child">
+                        <dd><a href="/class/manage">班级列表</a></dd>
+                        <dd class="layui-this"><a href="/class/add">新建班级</a></dd>
+                        <dd><a href="/student/manage">学生管理</a></dd>
+                    </dl>
+                </li>
+                <li class="layui-nav-item">
+                    <a href="javascript:;"><i class="layui-icon layui-icon-form"></i>考试管理</a>
+                    <dl class="layui-nav-child">
+                        <dd><a href="/exam/manage">考试列表</a></dd>
+                        <dd><a href="/exam/add">新建考试</a></dd>
+                        <dd><a href="/exam/template">答题卡模板</a></dd>
+                        <dd><a href="/exam/score">成绩管理</a></dd>
+                        <dd><a href="/exam/query">成绩查询</a></dd>
+                    </dl>
+                </li>
+                <li class="layui-nav-item" style="float: right;">
+                    <a href="javascript:;"><i class="layui-icon layui-icon-username"></i> <span id="username"></span></a>
+                    <dl class="layui-nav-child">
+                        <dd><a href="javascript:;" id="logout">退出登录</a></dd>
+                    </dl>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="layui-container" style="margin-top: 10px;">
+        <div class="layui-card">
+            <div class="layui-card-header">新建班级</div>
+            <div class="layui-card-body">
+                <form class="layui-form" action="">
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">班级名称</label>
+                        <div class="layui-input-block">
+                            <input type="text" name="class_name" required lay-verify="required" placeholder="请输入班级名称" autocomplete="off" class="layui-input">
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">班级编号</label>
+                        <div class="layui-input-block">
+                            <input type="text" name="class_code" required lay-verify="required" placeholder="请输入班级编号" autocomplete="off" class="layui-input">
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <div class="layui-input-block">
+                            <button class="layui-btn" lay-submit lay-filter="formDemo">立即提交</button>
+                            <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        layui.use(['form', 'layer'], function(){
+            var form = layui.form;
+            var layer = layui.layer;
+            
+            // 显示用户名
+            var username = getCookie('user');
+            if(username) {
+                $('#username').text(username);
+            }
+            
+            // 退出登录
+            $('#logout').click(function(){
+                deleteCookie('user');
+                window.location.href = '/login';
+            });
+
+            // 监听提交
+            form.on('submit(formDemo)', function(data){
+                $.ajax({
+                    url: '/api/class/add',
+                    type: 'POST',
+                    data: data.field,
+                    success: function(res){
+                        if(res.code === 200){
+                            layer.msg('添加成功', {
+                                icon: 1,
+                                time: 1000,
+                                shade: 0.3,
+                                shadeClose: true
+                            }, function(){
+                                window.location.href = '/class/manage';
+                            });
+                        }else{
+                            layer.msg(res.msg || '添加失败', {
+                                icon: 2,
+                                time: 2000
+                            });
+                        }
+                    }
+                });
+                return false;
+            });
+        });
+
+        // Cookie操作函数
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+            return null;
+        }
+        
+        function deleteCookie(name) {
+            document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+        }
+    </script>
+</body>
+</html> 
