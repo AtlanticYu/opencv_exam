@@ -1,0 +1,112 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="layui-card">
+    <div class="layui-card-header">
+        <h2>新建学生</h2>
+    </div>
+    <div class="layui-card-body">
+        <form class="layui-form" lay-filter="addForm">
+            <div class="layui-form-item">
+                <label class="layui-form-label">班级</label>
+                <div class="layui-input-block">
+                    <select name="class_id" lay-verify="required" lay-search>
+                        <option value="">请选择班级</option>
+                    </select>
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">学号</label>
+                <div class="layui-input-block">
+                    <input type="text" name="student_id" required lay-verify="required" placeholder="请输入学号" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">姓名</label>
+                <div class="layui-input-block">
+                    <input type="text" name="name" required lay-verify="required" placeholder="请输入姓名" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <div class="layui-input-block">
+                    <button class="layui-btn" lay-submit lay-filter="addForm">立即提交</button>
+                    <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script>
+    layui.use(['form', 'layer', 'laydate'], function(){
+        var form = layui.form;
+        var layer = layui.layer;
+        var laydate = layui.laydate;
+        
+        // 加载班级列表
+        function loadClassList() {
+            $.ajax({
+                url: '/api/class/list',
+                type: 'GET',
+                dataType: 'json',
+                success: function(res){
+                    console.log("res：", res);
+                    console.log("res.code：", res.code);
+                    if(res.code === 0 || res.code === 1){
+                        var html = '<option value="">请选择班级</option>';
+                        res.data.forEach(function(item){
+                            html += '<option value="'+item.class_id+'">'+item.class_name+'</option>';
+                        });
+                        $('select[name="class_id"]').html(html);
+                        form.render('select');
+                    } else {
+                        layer.msg('加载班级列表失败：' + (res.msg || '未知错误'), {icon: 2});
+                    }
+                },
+                error: function(){
+                    layer.msg('加载班级列表失败，请稍后重试', {icon: 2});
+                }
+            });
+        }
+        
+        // 初始化日期选择器
+        laydate.render({
+            elem: '#birth_date',
+            type: 'date',
+            format: 'yyyy-MM-dd'
+        });
+        
+        // 页面加载时加载班级列表
+        loadClassList();
+        
+        // 监听表单提交
+        form.on('submit(addForm)', function(data){
+            $.ajax({
+                url: '/student/add',
+                type: 'POST',
+                dataType: 'json',
+                data: data.field,
+                success: function(res){
+                    if(res.code === 0){
+                        layer.msg('添加成功', {
+                            icon: 1,
+                            time: 1000,
+                            shade: 0.3,
+                            shadeClose: true
+                        }, function(){
+                            window.location.href = '/student/manage';
+                        });
+                    } else {
+                        layer.msg(res.msg || '添加失败', {icon: 2});
+                    }
+                },
+                error: function(){
+                    layer.msg('服务器错误，请稍后重试', {icon: 2});
+                }
+            });
+            return false;
+        });
+    });
+</script>
+{% end %} 

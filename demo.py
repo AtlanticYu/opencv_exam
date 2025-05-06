@@ -321,7 +321,17 @@ class ClassListHandler(tornado.web.RequestHandler):
     def get(self):
         session = Session()
         try:
-            classes = session.query(Class).all()
+            # 获取分页参数
+            page = int(self.get_argument('page', 1))
+            limit = int(self.get_argument('limit', 10))
+            
+            # 计算偏移量
+            offset = (page - 1) * limit
+            
+            # 查询班级列表
+            classes = session.query(Class).offset(offset).limit(limit).all()
+            total = session.query(Class).count()
+            
             result = []
             for c in classes:
                 student_count = session.query(Student).filter_by(class_id=c.class_id).count()
@@ -332,9 +342,17 @@ class ClassListHandler(tornado.web.RequestHandler):
                     'student_count': student_count,
                     'created_at': c.created_at.strftime('%Y-%m-%d %H:%M:%S')
                 })
-            self.write(json.dumps({"code": 200, "data": result}))
+            self.write(json.dumps({
+                "code": 0,
+                "msg": "success",
+                "count": total,
+                "data": result
+            }))
         except Exception as e:
-            self.write(json.dumps({"code": 500, "msg": str(e)}))
+            self.write(json.dumps({
+                "code": 1,
+                "msg": str(e)
+            }))
         finally:
             session.close()
 
@@ -389,6 +407,123 @@ class ClassDeleteHandler(tornado.web.RequestHandler):
         finally:
             session.close()
 
+class StudentManageHandler(tornado.web.RequestHandler):
+    def get(self):
+        if not self.get_secure_cookie("user"):
+            self.redirect("/login")
+            return
+        self.render("student_manage.html")
+
+class StudentListHandler(tornado.web.RequestHandler):
+    def get(self):
+        session = Session()
+        try:
+            # 获取分页参数
+            page = int(self.get_argument('page', 1))
+            limit = int(self.get_argument('limit', 10))
+            
+            # 计算偏移量
+            offset = (page - 1) * limit
+            
+            # 查询学生列表
+            students = session.query(Student, Class).join(Class, Student.class_id == Class.class_id)\
+                .offset(offset).limit(limit).all()
+            total = session.query(Student).count()
+            
+            result = []
+            for student, cls in students:
+                result.append({
+                    'student_id': student.student_id,
+                    'name': student.name,
+                    'class_name': cls.class_name,
+                    'created_at': student.created_at.strftime('%Y-%m-%d %H:%M:%S')
+                })
+                
+            self.write(json.dumps({
+                "code": 0,
+                "msg": "success",
+                "count": total,
+                "data": result
+            }))
+        except Exception as e:
+            self.write(json.dumps({
+                "code": 1,
+                "msg": str(e)
+            }))
+        finally:
+            session.close()
+
+class StudentAddHandler(tornado.web.RequestHandler):
+    def get(self):
+        if not self.get_secure_cookie("user"):
+            self.redirect("/login")
+            return
+        self.render("student_add.html")
+    
+    def post(self):
+        if not self.get_secure_cookie("user"):
+            self.write(json.dumps({"code": 401, "msg": "请先登录"}))
+            return
+            
+        try:
+            # 获取必填字段
+            class_id = self.get_argument("class_id")
+            student_id = self.get_argument("student_id")
+            name = self.get_argument("name")
+            
+            # 检查学号是否已存在
+            session = Session()
+            existing_student = session.query(Student).filter(Student.student_id == student_id).first()
+            if existing_student:
+                self.write(json.dumps({"code": 1, "msg": "该学号已存在"}))
+                session.close()
+                return
+
+            
+            # 创建新学生
+            new_student = Student(
+                class_id=class_id,
+                student_id=student_id,
+                name=name,
+            )
+            
+            # 保存到数据库
+            session.add(new_student)
+            session.commit()
+            session.close()
+            
+            self.write(json.dumps({"code": 0, "msg": "添加成功"}))
+        except Exception as e:
+            if 'session' in locals():
+                session.rollback()
+                session.close()
+            self.write(json.dumps({"code": 1, "msg": f"添加失败：{str(e)}"}))
+
+class StudentDeleteHandler(tornado.web.RequestHandler):
+    def post(self):
+        session = Session()
+        try:
+            student_id = self.get_argument("student_id")
+            
+            # 检查是否有考试成绩
+            score_count = session.query(ExamScore).filter_by(student_id=student_id).count()
+            if score_count > 0:
+                self.write(json.dumps({"code": 1, "msg": "该学生有考试成绩记录，无法删除"}))
+                return
+            
+            student = session.query(Student).filter_by(student_id=student_id).first()
+            if student:
+                session.delete(student)
+                session.commit()
+                self.write(json.dumps({"code": 0, "msg": "删除成功"}))
+            else:
+                self.write(json.dumps({"code": 1, "msg": "学生不存在"}))
+        except Exception as e:
+            session.rollback()
+            self.write(json.dumps({"code": 1, "msg": str(e)}))
+        finally:
+            session.close()
+
 def make_app():
     return tornado.web.Application([
         (r"/", MainHandler),
@@ -399,6 +534,10 @@ def make_app():
         (r"/api/class/list", ClassListHandler),
         (r"/api/class/add", ClassAddApiHandler),
         (r"/api/class/delete", ClassDeleteHandler),
+        (r"/student/manage", StudentManageHandler),
+        (r"/student/add", StudentAddHandler),
+        (r"/api/student/list", StudentListHandler),
+        (r"/api/student/delete", StudentDeleteHandler),
         (r"/static/(.*)", StaticFileHandler, {"path": "static"}),
     ], 
     template_path="templates",

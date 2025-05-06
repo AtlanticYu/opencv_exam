@@ -5,31 +5,39 @@
     <div class="layui-card-header">
         <div class="layui-row">
             <div class="layui-col-md6">
-                <h2>班级管理</h2>
+                <h2>学生管理</h2>
             </div>
             <div class="layui-col-md6" style="text-align: right;">
-                <button class="layui-btn layui-btn-normal" id="addClass">新建班级</button>
+                <button class="layui-btn layui-btn-normal" id="addStudent">添加学生</button>
             </div>
         </div>
     </div>
     <div class="layui-card-body">
-        <table id="classTable" lay-filter="classTable"></table>
+        <table id="studentTable" lay-filter="studentTable"></table>
     </div>
 </div>
 
-<!-- 添加班级表单 -->
+<!-- 添加学生表单 -->
 <div id="addForm" style="display: none; padding: 20px;">
     <form class="layui-form" lay-filter="addForm">
         <div class="layui-form-item">
-            <label class="layui-form-label">班级名称</label>
+            <label class="layui-form-label">班级</label>
             <div class="layui-input-block">
-                <input type="text" name="class_name" required lay-verify="required" placeholder="请输入班级名称" autocomplete="off" class="layui-input">
+                <select name="class_id" lay-verify="required" lay-search>
+                    <option value="">请选择班级</option>
+                </select>
             </div>
         </div>
         <div class="layui-form-item">
-            <label class="layui-form-label">班级编号</label>
+            <label class="layui-form-label">学号</label>
             <div class="layui-input-block">
-                <input type="text" name="class_code" required lay-verify="required" placeholder="请输入班级编号" autocomplete="off" class="layui-input">
+                <input type="text" name="student_id" required lay-verify="required" placeholder="请输入学号" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">姓名</label>
+            <div class="layui-input-block">
+                <input type="text" name="name" required lay-verify="required" placeholder="请输入姓名" autocomplete="off" class="layui-input">
             </div>
         </div>
         <div class="layui-form-item">
@@ -52,33 +60,58 @@
         var form = layui.form;
         var layer = layui.layer;
         
+        // 加载班级列表
+        function loadClassList() {
+            $.ajax({
+                url: '/api/class/list',
+                type: 'GET',
+                success: function(res){
+                    if(res.code === 0){
+                        var html = '<option value="">请选择班级</option>';
+                        res.data.forEach(function(item){
+                            html += '<option value="'+item.class_id+'">'+item.class_name+'</option>';
+                        });
+                        $('select[name="class_id"]').html(html);
+                        form.render('select');
+                    } else {
+                        layer.msg('加载班级列表失败：' + (res.msg || '未知错误'), {icon: 2});
+                    }
+                },
+                error: function(){
+                    layer.msg('加载班级列表失败，请稍后重试', {icon: 2});
+                }
+            });
+        }
+        
         // 初始化表格
         table.render({
-            elem: '#classTable',
-            url: '/api/class/list',
+            elem: '#studentTable',
+            url: '/api/student/list',
             cols: [[
-                {field: 'class_id', title: 'ID', width: 80},
-                {field: 'class_name', title: '班级名称', width: 200},
-                {field: 'class_code', title: '班级编号', width: 150},
-                {field: 'student_count', title: '学生人数', width: 100},
+                {field: 'student_id', title: '学号', width: 120},
+                {field: 'name', title: '姓名', width: 120},
+                {field: 'class_name', title: '班级', width: 200},
                 {field: 'created_at', title: '创建时间', width: 180},
                 {title: '操作', width: 150, toolbar: '#tableToolbar'}
             ]],
             page: true
         });
         
-        // 添加班级按钮点击事件
-        $('#addClass').click(function(){
+        // 添加学生按钮点击事件
+        $('#addStudent').click(function(){
             var index = layer.open({
                 type: 1,
-                title: '新建班级',
-                area: ['500px', '300px'],
+                title: '添加学生',
+                area: ['500px', '400px'],
                 content: $('#addForm'),
                 success: function(layero, index){
+                    // 每次打开弹窗时重新加载班级列表
+                    loadClassList();
                     // 重置表单
                     form.val('addForm', {
-                        'class_name': '',
-                        'class_code': ''
+                        'class_id': '',
+                        'student_id': '',
+                        'name': ''
                     });
                     // 重新渲染表单
                     form.render();
@@ -89,14 +122,14 @@
         // 监听添加表单提交
         form.on('submit(addForm)', function(data){
             $.ajax({
-                url: '/api/class/add',
+                url: '/api/student/add',
                 type: 'POST',
                 data: data.field,
                 success: function(res){
-                    if(res.code === 200){
+                    if(res.code === 0){
                         layer.msg('添加成功', {icon: 1});
                         layer.closeAll();
-                        table.reload('classTable');
+                        table.reload('studentTable');
                     } else {
                         layer.msg(res.msg || '添加失败', {icon: 2});
                     }
@@ -109,18 +142,18 @@
         });
         
         // 监听工具条
-        table.on('tool(classTable)', function(obj){
+        table.on('tool(studentTable)', function(obj){
             var data = obj.data;
             if(obj.event === 'del'){
-                layer.confirm('确定删除该班级吗？', function(index){
+                layer.confirm('确定删除该学生吗？', function(index){
                     $.ajax({
-                        url: '/api/class/delete',
+                        url: '/api/student/delete',
                         type: 'POST',
-                        data: {class_id: data.class_id},
+                        data: {student_id: data.student_id},
                         success: function(res){
-                            if(res.code === 200){
+                            if(res.code === 0){
                                 layer.msg('删除成功', {icon: 1});
-                                table.reload('classTable');
+                                table.reload('studentTable');
                             } else {
                                 layer.msg(res.msg || '删除失败', {icon: 2});
                             }

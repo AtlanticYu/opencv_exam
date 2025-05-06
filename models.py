@@ -1,6 +1,6 @@
-from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, Text
+from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, Text, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, relationship
 from datetime import datetime
 
 Base = declarative_base()
@@ -24,12 +24,17 @@ class Class(Base):
 class Student(Base):
     __tablename__ = 'student'
     
-    student_id = Column(Integer, primary_key=True, autoincrement=True)
-    student_name = Column(String(50), nullable=False)
-    exam_number = Column(String(20), nullable=False, unique=True)
-    class_id = Column(Integer, nullable=False)
+    student_id = Column(String(20), primary_key=True)
+    name = Column(String(50), nullable=False)
+    class_id = Column(Integer, ForeignKey('class.class_id'), nullable=False)
     created_at = Column(DateTime, default=datetime.now)
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+    
+    # 添加与Class的关系
+    class_ = relationship("Class", back_populates="students")
+
+# 在Class模型中添加反向关系
+Class.students = relationship("Student", back_populates="class_")
 
 class Exam(Base):
     __tablename__ = 'exam'
@@ -45,8 +50,8 @@ class ExamScore(Base):
     __tablename__ = 'exam_score'
     
     score_id = Column(Integer, primary_key=True, autoincrement=True)
-    student_id = Column(Integer, nullable=False)
-    exam_id = Column(Integer, nullable=False)
+    student_id = Column(String(20), ForeignKey('student.student_id'), nullable=False)
+    exam_id = Column(Integer, ForeignKey('exam.exam_id'), nullable=False)
     subjective_score = Column(Float)
     objective_score = Column(Float)
     total_score = Column(Float)

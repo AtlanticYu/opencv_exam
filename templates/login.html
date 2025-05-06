@@ -50,11 +50,9 @@
                     url: '/login',
                     type: 'POST',
                     data: data.field,
-                    dataType: 'json',  // 明确指定期望的响应类型
                     success: function(res){
-                        console.log("Response received:", res);
-                        if(res && res.code === 200){
-                            layer.msg(res.msg, {
+                        if(res && res.code === 0){
+                            layer.msg('登录成功', {
                                 icon: 1,
                                 time: 1000,
                                 shade: 0.3,
@@ -63,7 +61,7 @@
                                 window.location.href = '/';
                             });
                         } else {
-                            layer.msg(res ? res.msg : '未知错误', {
+                            layer.msg(res ? res.msg : '登录失败', {
                                 icon: 2,
                                 time: 2000,
                                 shade: 0.3,
@@ -71,8 +69,7 @@
                             });
                         }
                     },
-                    error: function(xhr, status, error){
-                        console.error("AJAX error:", status, error);
+                    error: function(){
                         layer.msg('服务器错误，请稍后重试', {
                             icon: 2,
                             time: 2000,
