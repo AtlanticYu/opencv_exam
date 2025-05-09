@@ -1,0 +1,135 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div style="padding: 40px;">
+    <h2>考试管理</h2>
+    <button class="btn btn-add" onclick="showModal()">新建考试</button>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>科目</th>
+                <th>类型</th>
+                <th>标准答案</th>
+                <th>赋分比例</th>
+                <th>创建时间</th>
+                <th>更新时间</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody id="exam-tbody"></tbody>
+    </table>
+</div>
+
+<!-- 新建考试弹窗 -->
+<div class="modal" id="modal">
+    <div class="modal-content">
+        <h3>新建考试</h3>
+        <form id="add-form">
+            <label>考试科目</label>
+            <input name="exam_subject" required>
+            <label>考试类型</label>
+            <input name="exam_type" required>
+            <label>标准答案</label>
+            <textarea name="answer_template" rows="3"></textarea>
+            <label>赋分比例</label>
+            <input name="scoring_ratio" type="number" step="0.01" value="1.0" required>
+            <button type="submit" class="btn btn-add" style="width:100%;">提交</button>
+            <button type="button" class="btn" onclick="hideModal()" style="width:100%;margin-top:5px;">取消</button>
+        </form>
+    </div>
+</div>
+
+<style>
+    table { border-collapse: collapse; width: 100%; margin-top: 20px; background: #fff; }
+    th, td { border: 1px solid #eaeaea; padding: 8px; text-align: center; }
+    th { background: #f2f2f2; }
+    .btn { padding: 5px 12px; border: none; border-radius: 3px; cursor: pointer; }
+    .btn-add { background: #409eff; color: white; }
+    .btn-del { background: #f56c6c; color: white; }
+    .modal { display: none; position: fixed; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); z-index: 1000;}
+    .modal-content { background: #fff; margin: 8% auto; padding: 24px; width: 350px; border-radius: 5px; }
+    .modal input, .modal textarea { width: 100%; margin-bottom: 10px; padding: 6px; }
+    .modal label { display: block; margin-bottom: 4px; }
+</style>
+
+<script>
+    // 获取考试列表
+    function loadExams() {
+        fetch('/api/exam/list')
+            .then(res => res.json())
+            .then(data => {
+                if (data.code === 0) {
+                    const tbody = document.getElementById('exam-tbody');
+                    tbody.innerHTML = '';
+                    data.data.forEach(e => {
+                        tbody.innerHTML += `
+                            <tr>
+                                <td>${e.exam_id}</td>
+                                <td>${e.exam_subject}</td>
+                                <td>${e.exam_type}</td>
+                                <td style="max-width:150px;overflow:auto;">${e.answer_template || ''}</td>
+                                <td>${e.scoring_ratio}</td>
+                                <td>${e.created_at}</td>
+                                <td>${e.updated_at}</td>
+                                <td>
+                                    <button class="btn btn-del" onclick="delExam(${e.exam_id})">删除</button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                } else {
+                    alert('获取考试列表失败: ' + data.msg);
+                }
+            });
+    }
+
+    // 删除考试
+    function delExam(id) {
+        if (!confirm('确定要删除该考试吗？')) return;
+        fetch('/api/exam/delete', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: 'exam_id=' + encodeURIComponent(id)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.code === 200) {
+                alert('删除成功');
+                loadExams();
+            } else {
+                alert('删除失败: ' + data.msg);
+            }
+        });
+    }
+
+    // 弹窗控制
+    function showModal() { document.getElementById('modal').style.display = 'block'; }
+    function hideModal() { document.getElementById('modal').style.display = 'none'; }
+
+    // 新建考试表单提交
+    document.getElementById('add-form').onsubmit = function(e) {
+        e.preventDefault();
+        const form = e.target;
+        const fd = new FormData(form);
+        fetch('/api/exam/add', {
+            method: 'POST',
+            body: new URLSearchParams(fd)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.code === 200) {
+                alert('添加成功');
+                hideModal();
+                form.reset();
+                loadExams();
+            } else {
+                alert('添加失败: ' + data.msg);
+            }
+        });
+    };
+
+    // 页面加载时拉取数据
+    window.onload = loadExams;
+</script>
+{% end %}

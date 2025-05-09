@@ -565,6 +565,89 @@ class StudentDeleteHandler(tornado.web.RequestHandler):
         finally:
             session.close()
 
+class ExamManageHandler(tornado.web.RequestHandler):
+    def get(self):
+        if not self.get_secure_cookie("user"):
+            self.redirect("/login")
+            return
+        self.render("exam_manage.html")
+
+class ExamListHandler(tornado.web.RequestHandler):
+    def get(self):
+        session = Session()
+        try:
+            # 筛选参数
+            exam_subject = self.get_argument('exam_subject', None)
+            exam_type = self.get_argument('exam_type', None)
+            page = int(self.get_argument('page', 1))
+            limit = int(self.get_argument('limit', 10))
+            offset = (page - 1) * limit
+
+            query = session.query(Exam)
+            if exam_subject:
+                query = query.filter(Exam.exam_subject == exam_subject)
+            if exam_type:
+                query = query.filter(Exam.exam_type == exam_type)
+
+            total = query.count()
+            exams = query.order_by(Exam.created_at.desc()).offset(offset).limit(limit).all()
+            result = [{
+                "exam_id": e.exam_id,
+                "exam_subject": e.exam_subject,
+                "exam_type": e.exam_type,
+                "answer_template": e.answer_template,
+                "scoring_ratio": e.scoring_ratio,
+                "created_at": e.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                "updated_at": e.updated_at.strftime('%Y-%m-%d %H:%M:%S')
+            } for e in exams]
+            self.write(json.dumps({"code": 0, "msg": "success", "count": total, "data": result}))
+        except Exception as e:
+            self.write(json.dumps({"code": 1, "msg": str(e)}))
+        finally:
+            session.close()
+
+class ExamAddHandler(tornado.web.RequestHandler):
+    def post(self):
+        session = Session()
+        try:
+            exam_subject = self.get_argument("exam_subject")
+            exam_type = self.get_argument("exam_type")
+            answer_template = self.get_argument("answer_template", "")
+            scoring_ratio = float(self.get_argument("scoring_ratio", 1.0))
+
+            new_exam = Exam(
+                exam_subject=exam_subject,
+                exam_type=exam_type,
+                answer_template=answer_template,
+                scoring_ratio=scoring_ratio
+            )
+            session.add(new_exam)
+            session.commit()
+            self.write(json.dumps({"code": 200, "msg": "添加成功"}))
+        except Exception as e:
+            session.rollback()
+            self.write(json.dumps({"code": 500, "msg": str(e)}))
+        finally:
+            session.close()
+
+class ExamDeleteHandler(tornado.web.RequestHandler):
+    def post(self):
+        session = Session()
+        try:
+            exam_id = self.get_argument("exam_id")
+            exam = session.query(Exam).filter_by(exam_id=exam_id).first()
+            if exam:
+                session.delete(exam)
+                session.commit()
+                self.write(json.dumps({"code": 200, "msg": "删除成功"}))
+            else:
+                self.write(json.dumps({"code": 404, "msg": "考试不存在"}))
+        except Exception as e:
+            session.rollback()
+            self.write(json.dumps({"code": 500, "msg": str(e)}))
+        finally:
+            session.close()
+
 def make_app():
     return tornado.web.Application([
         (r"/", MainHandler),
@@ -580,6 +663,10 @@ def make_app():
         (r"/api/student/list", StudentListHandler),
         (r"/api/student/add", StudentAddAPIHandler),
         (r"/api/student/delete", StudentDeleteHandler),
+        (r"/exam/manage", ExamManageHandler),
+        (r"/api/exam/list", ExamListHandler),
+        (r"/api/exam/add", ExamAddHandler),
+        (r"/api/exam/delete", ExamDeleteHandler),
         (r"/static/(.*)", StaticFileHandler, {"path": "static"}),
     ], 
     template_path="templates",

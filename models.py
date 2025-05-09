@@ -40,9 +40,10 @@ class Exam(Base):
     __tablename__ = 'exam'
     
     exam_id = Column(Integer, primary_key=True, autoincrement=True)
-    exam_name = Column(String(100), nullable=False)
-    answer_template = Column(Text)
-    scoring_ratio = Column(String(100), nullable=False)
+    exam_subject = Column(String(100), nullable=False) # 考试科目
+    exam_type = Column(String(100), nullable=False) # 考试类型
+    answer_template = Column(Text) # 标准答案
+    scoring_ratio = Column(Float) # 赋分比例
     created_at = Column(DateTime, default=datetime.now)
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
 
