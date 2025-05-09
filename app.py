@@ -49,7 +49,7 @@ class ClassListAPIHandler(BaseHandler):
             "student_count": len(c.students),
             "created_at": c.created_at.strftime("%Y-%m-%d %H:%M:%S")
         } for c in classes]
-        self.write({"code": 0, "data": data})
+        self.write({"code": 200, "data": data})
 
 class ClassAddAPIHandler(BaseHandler):
     def post(self):

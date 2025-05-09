@@ -23,19 +23,21 @@
         <div class="layui-form-item">
             <label class="layui-form-label">班级名称</label>
             <div class="layui-input-block">
-                <input type="text" name="class_name" required lay-verify="required" placeholder="请输入班级名称" autocomplete="off" class="layui-input">
+                <input type="text" name="class_name" required lay-verify="required" placeholder="请输入班级名称"
+                    autocomplete="off" class="layui-input">
             </div>
         </div>
         <div class="layui-form-item">
             <label class="layui-form-label">班级编号</label>
             <div class="layui-input-block">
-                <input type="text" name="class_code" required lay-verify="required" placeholder="请输入班级编号" autocomplete="off" class="layui-input">
+                <input type="text" name="class_code" required lay-verify="required" placeholder="请输入班级编号"
+                    autocomplete="off" class="layui-input">
             </div>
         </div>
         <div class="layui-form-item">
             <div class="layui-input-block">
                 <button class="layui-btn" lay-submit lay-filter="addForm">提交</button>
-                <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+                <button type="button" class="layui-btn layui-btn-primary" onclick="layer.closeAll();">取消</button>
             </div>
         </div>
     </form>
@@ -47,86 +49,90 @@
 </script>
 
 <script>
-    layui.use(['table', 'form', 'layer'], function(){
+    layui.use(['table', 'form', 'layer'], function () {
         var table = layui.table;
         var form = layui.form;
         var layer = layui.layer;
-        
+
         // 初始化表格
         table.render({
             elem: '#classTable',
             url: '/api/class/list',
             cols: [[
-                {field: 'class_id', title: 'ID', width: 80},
-                {field: 'class_name', title: '班级名称', width: 200},
-                {field: 'class_code', title: '班级编号', width: 150},
-                {field: 'student_count', title: '学生人数', width: 100},
-                {field: 'created_at', title: '创建时间', width: 180},
-                {title: '操作', width: 150, toolbar: '#tableToolbar'}
+                { field: 'class_id', title: 'ID', width: 80 },
+                { field: 'class_name', title: '班级名称', width: 200 },
+                { field: 'class_code', title: '班级编号', width: 150 },
+                { field: 'student_count', title: '学生人数', width: 100 },
+                { field: 'created_at', title: '创建时间', width: 180 },
+                { title: '操作', width: 150, toolbar: '#tableToolbar' }
             ]],
             page: true
         });
-        
+
         // 添加班级按钮点击事件
-        $('#addClass').click(function(){
+        $('#addClass').click(function () {
             var index = layer.open({
                 type: 1,
                 title: '新建班级',
                 area: ['500px', '300px'],
-                content: $('#addForm'),
-                success: function(layero, index){
-                    // 重置表单
-                    form.val('addForm', {
+                content: $('#addForm').html(), // 关键改动：用 html() 克隆内容
+                success: function (layero, index) {
+                    // 使用 layero 查找刚插入的表单，重新初始化
+                    var formDom = layero.find('form');
+
+                    layui.form.val('addForm', {
                         'class_name': '',
                         'class_code': ''
                     });
-                    // 重新渲染表单
-                    form.render();
+
+                    layui.form.render();
                 }
             });
         });
-        
+
         // 监听添加表单提交
-        form.on('submit(addForm)', function(data){
+        form.on('submit(addForm)', function (data) {
             $.ajax({
                 url: '/api/class/add',
                 type: 'POST',
                 data: data.field,
-                success: function(res){
-                    if(res.code === 200){
-                        layer.msg('添加成功', {icon: 1});
+                dataType: 'json',
+                success: function (res) {
+                    if (res.code === 200) {
+                        layer.msg('添加成功', { icon: 1 });
                         layer.closeAll();
                         table.reload('classTable');
                     } else {
-                        layer.msg(res.msg || '添加失败', {icon: 2});
+                        layer.msg(res.msg || '添加失败', { icon: 2 });
                     }
                 },
-                error: function(){
-                    layer.msg('服务器错误，请稍后重试', {icon: 2});
+                error: function () {
+                    layer.msg('服务器错误，请稍后重试', { icon: 2 });
                 }
             });
             return false;
         });
-        
+
         // 监听工具条
-        table.on('tool(classTable)', function(obj){
+        table.on('tool(classTable)', function (obj) {
             var data = obj.data;
-            if(obj.event === 'del'){
-                layer.confirm('确定删除该班级吗？', function(index){
+            if (obj.event === 'del') {
+                layer.confirm('确定删除该班级吗？', function (index) {
                     $.ajax({
                         url: '/api/class/delete',
                         type: 'POST',
-                        data: {class_id: data.class_id},
-                        success: function(res){
-                            if(res.code === 200){
-                                layer.msg('删除成功', {icon: 1});
+                        data: { class_id: data.class_id },
+                        dataType: 'json',
+                        success: function (res) {
+                            if (res.code === 200) {
+                                layer.msg('删除成功', { icon: 1 });
                                 table.reload('classTable');
                             } else {
-                                layer.msg(res.msg || '删除失败', {icon: 2});
+                                layer.msg(res.msg || '删除失败', { icon: 2 });
                             }
                         },
-                        error: function(){
-                            layer.msg('服务器错误，请稍后重试', {icon: 2});
+                        error: function () {
+                            layer.msg('服务器错误，请稍后重试', { icon: 2 });
                         }
                     });
                     layer.close(index);
@@ -135,4 +141,4 @@
         });
     });
 </script>
-{% end %} 
+{% end %}

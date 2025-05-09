@@ -43,7 +43,7 @@
         <div class="layui-form-item">
             <div class="layui-input-block">
                 <button class="layui-btn" lay-submit lay-filter="addForm">提交</button>
-                <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+                <button type="button" class="layui-btn layui-btn-primary" onclick="layer.closeAll();">取消</button>
             </div>
         </div>
     </form>
@@ -65,6 +65,7 @@
             $.ajax({
                 url: '/api/class/list',
                 type: 'GET',
+                dataType: 'json',
                 success: function(res){
                     if(res.code === 0){
                         var html = '<option value="">请选择班级</option>';
@@ -88,7 +89,7 @@
             elem: '#studentTable',
             url: '/api/student/list',
             cols: [[
-                {field: 'student_id', title: '学号', width: 120},
+                {field: 'student_id', title: '学号', width: 200},
                 {field: 'name', title: '姓名', width: 120},
                 {field: 'class_name', title: '班级', width: 200},
                 {field: 'created_at', title: '创建时间', width: 180},
@@ -96,15 +97,15 @@
             ]],
             page: true
         });
-        
+
         // 添加学生按钮点击事件
-        $('#addStudent').click(function(){
+        $('#addStudent').click(function () {
             var index = layer.open({
                 type: 1,
                 title: '添加学生',
                 area: ['500px', '400px'],
-                content: $('#addForm'),
-                success: function(layero, index){
+                content: $('#addForm').html(),  // 克隆表单内容
+                success: function (layero, index) {
                     // 每次打开弹窗时重新加载班级列表
                     loadClassList();
                     // 重置表单
@@ -118,15 +119,17 @@
                 }
             });
         });
-        
+
+
         // 监听添加表单提交
         form.on('submit(addForm)', function(data){
             $.ajax({
                 url: '/api/student/add',
                 type: 'POST',
                 data: data.field,
+                dataType: 'json',
                 success: function(res){
-                    if(res.code === 0){
+                    if(res.code === 200){
                         layer.msg('添加成功', {icon: 1});
                         layer.closeAll();
                         table.reload('studentTable');
@@ -150,8 +153,9 @@
                         url: '/api/student/delete',
                         type: 'POST',
                         data: {student_id: data.student_id},
+                        dataType: 'json',
                         success: function(res){
-                            if(res.code === 0){
+                            if(res.code === 200){
                                 layer.msg('删除成功', {icon: 1});
                                 table.reload('studentTable');
                             } else {

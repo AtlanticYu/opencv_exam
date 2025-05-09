@@ -50,8 +50,9 @@
                     url: '/login',
                     type: 'POST',
                     data: data.field,
+                    dataType: 'json',
                     success: function(res){
-                        if(res && res.code === 0){
+                        if(res && res.code === 200){
                             layer.msg('登录成功', {
                                 icon: 1,
                                 time: 1000,

@@ -49,25 +49,36 @@
                     <li class="layui-nav-item {% if request.uri == '/' %}layui-this{% end %}">
                         <a href="/"><i class="layui-icon layui-icon-camera"></i> 识别答题卡</a>
                     </li>
-                    <li class="layui-nav-item {% if request.uri.startswith('/class/') or request.uri.startswith('/student/') %}layui-nav-itemed{% end %}">
-                        <a href="javascript:;"><i class="layui-icon layui-icon-group"></i> 班级管理</a>
-                        <dl class="layui-nav-child">
-                            <dd class="{% if request.uri == '/class/manage' %}layui-this{% end %}"><a href="/class/manage">班级列表</a></dd>
-                            <dd class="{% if request.uri == '/class/add' %}layui-this{% end %}"><a href="/class/add">新建班级</a></dd>
-                            <dd class="{% if request.uri == '/student/manage' %}layui-this{% end %}"><a href="/student/manage">学生列表</a></dd>
-                            <dd class="{% if request.uri == '/student/add' %}layui-this{% end %}"><a href="/student/add">新建学生</a></dd>
-                        </dl>
+                    <!-- 改为一级菜单 -->
+                    <li class="layui-nav-item {% if request.uri == '/class/manage' %}layui-this{% end %}">
+                        <a href="/class/manage"><i class="layui-icon layui-icon-group"></i> 班级管理</a>
                     </li>
-                    <li class="layui-nav-item {% if request.uri.startswith('/exam/') %}layui-nav-itemed{% end %}">
-                        <a href="javascript:;"><i class="layui-icon layui-icon-form"></i> 考试管理</a>
-                        <dl class="layui-nav-child">
-                            <dd class="{% if request.uri == '/exam/manage' %}layui-this{% end %}"><a href="/exam/manage">考试列表</a></dd>
-                            <dd class="{% if request.uri == '/exam/add' %}layui-this{% end %}"><a href="/exam/add">新建考试</a></dd>
-                            <dd class="{% if request.uri == '/exam/template' %}layui-this{% end %}"><a href="/exam/template">答题卡模板</a></dd>
-                            <dd class="{% if request.uri == '/exam/score' %}layui-this{% end %}"><a href="/exam/score">成绩管理</a></dd>
-                            <dd class="{% if request.uri == '/exam/query' %}layui-this{% end %}"><a href="/exam/query">成绩查询</a></dd>
-                        </dl>
+
+                    <li class="layui-nav-item {% if request.uri == '/student/manage' %}layui-this{% end %}">
+                        <a href="/student/manage"><i class="layui-icon layui-icon-form"></i> 学生管理</a>
                     </li>
+
+                    <li class="layui-nav-item {% if request.uri == '/exam/manage' %}layui-this{% end %}">
+                        <a href="/exam/manage"><i class="layui-icon layui-icon-form"></i> 考试管理</a>
+                    </li>
+
+<!--?                    <li class="layui-nav-item {% if request.uri.startswith('/class/') or request.uri.startswith('/student/') %}layui-nav-itemed{% end %}">-->
+<!--?                        <a href="javascript:;"><i class="layui-icon layui-icon-group"></i> 班级管理</a>-->
+<!--?                        <dl class="layui-nav-child">-->
+<!--?                            <dd class="{% if request.uri == '/class/manage' %}layui-this{% end %}"><a href="/class/manage">班级列表</a></dd>-->
+<!--?                            <dd class="{% if request.uri == '/student/manage' %}layui-this{% end %}"><a href="/student/manage">学生列表</a></dd>-->
+<!--?                        </dl>-->
+<!--?                    </li>-->
+<!--?                    <li class="layui-nav-item {% if request.uri.startswith('/exam/') %}layui-nav-itemed{% end %}">-->
+<!--?                        <a href="javascript:;"><i class="layui-icon layui-icon-form"></i> 考试管理</a>-->
+<!--?                        <dl class="layui-nav-child">-->
+<!--?                            <dd class="{% if request.uri == '/exam/manage' %}layui-this{% end %}"><a href="/exam/manage">考试列表</a></dd>-->
+<!--?                            <dd class="{% if request.uri == '/exam/add' %}layui-this{% end %}"><a href="/exam/add">新建考试</a></dd>-->
+<!--?                            <dd class="{% if request.uri == '/exam/template' %}layui-this{% end %}"><a href="/exam/template">答题卡模板</a></dd>-->
+<!--?                            <dd class="{% if request.uri == '/exam/score' %}layui-this{% end %}"><a href="/exam/score">成绩管理</a></dd>-->
+<!--?                            <dd class="{% if request.uri == '/exam/query' %}layui-this{% end %}"><a href="/exam/query">成绩查询</a></dd>-->
+<!--?                        </dl>-->
+<!--?                    </li>-->
                 </ul>
             </div>
         </div>

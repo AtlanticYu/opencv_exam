@@ -499,6 +499,47 @@ class StudentAddHandler(tornado.web.RequestHandler):
                 session.close()
             self.write(json.dumps({"code": 1, "msg": f"添加失败：{str(e)}"}))
 
+class StudentAddAPIHandler(tornado.web.RequestHandler):
+    def post(self):
+        session = Session()
+        try:
+            # 获取参数
+            student_id = self.get_argument("student_id", "").strip()
+            name = self.get_argument("name", "").strip()
+            class_id = self.get_argument("class_id", "").strip()
+
+            # 校验参数
+            if not student_id or not name or not class_id:
+                self.write({"code": 400, "msg": "学号、姓名、班级不能为空"})
+                return
+
+            # 检查学号是否已存在
+            existing = session.query(Student).filter_by(student_id=student_id).first()
+            if existing:
+                self.write({"code": 400, "msg": "学号已存在"})
+                return
+
+            # 检查班级是否存在
+            class_obj = session.query(Class).filter_by(class_id=class_id).first()
+            if not class_obj:
+                self.write({"code": 400, "msg": "班级不存在"})
+                return
+
+            # 创建新学生
+            new_student = Student(
+                student_id=student_id,
+                name=name,
+                class_id=class_id
+            )
+            session.add(new_student)
+            session.commit()
+            self.write({"code": 200, "msg": "添加成功"})
+        except Exception as e:
+            session.rollback()
+            self.write({"code": 500, "msg": f"添加失败: {str(e)}"})
+        finally:
+            session.close()
+
 class StudentDeleteHandler(tornado.web.RequestHandler):
     def post(self):
         session = Session()
@@ -537,6 +578,7 @@ def make_app():
         (r"/student/manage", StudentManageHandler),
         (r"/student/add", StudentAddHandler),
         (r"/api/student/list", StudentListHandler),
+        (r"/api/student/add", StudentAddAPIHandler),
         (r"/api/student/delete", StudentDeleteHandler),
         (r"/static/(.*)", StaticFileHandler, {"path": "static"}),
     ], 
