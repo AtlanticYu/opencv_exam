@@ -6,137 +6,131 @@
     <link rel="stylesheet" href="/static/css/layui.css">
     <script src="/static/jquery-3.2.1.min.js"></script>
     <script src="/static/layui.all.js"></script>
-    <style>
-        .layui-layout-admin .layui-logo {
-            color: #fff;
-            font-size: 18px;
-        }
-        .layui-layout-admin .layui-side {
-            width: 220px;
-        }
-        .layui-layout-admin .layui-body {
-            left: 220px;
-        }
-        .layui-layout-admin .layui-header {
-            left: 220px;
-        }
-        .layui-nav-tree {
-            width: 220px;
-        }
-    </style>
 </head>
-<body class="layui-layout-body">
-    <div class="layui-layout layui-layout-admin">
-        <!-- 头部区域 -->
-        <div class="layui-header">
-            <div class="layui-logo">答题卡识别判卷系统</div>
-            <ul class="layui-nav layui-layout-right">
-                <li class="layui-nav-item">
-                    <a href="javascript:;">
-                        <i class="layui-icon layui-icon-username"></i> <span id="username"></span>
-                    </a>
-                    <dl class="layui-nav-child">
-                        <dd><a href="javascript:;" id="logout">退出登录</a></dd>
-                    </dl>
+
+<body>
+<div class="layui-layout layui-layout-admin">
+    <!-- 头部区域 -->
+    <div class="layui-header">
+        <div class="layui-logo layui-hide-xs layui-bg-black">
+            <img src="/static/images/巢湖学院logo.png" alt="logo"
+                 style="width: 100%; height: 100%; object-fit: cover;">
+        </div>
+        <!-- 中间系统标题 -->
+        <ul class="layui-nav layui-layout-left">
+            <div class="system-title layui-hide-xs"
+                 style="color: white; font-size: 18px; line-height: 60px; padding-left: 20px; float: left;">
+                自动化成绩管理系统
+            </div>
+        </ul>
+        <ul class="layui-nav layui-layout-right">
+            <li class="layui-nav-item">
+                <a href="javascript:;">
+                    <i class="layui-icon layui-icon-username"></i> <span id="username"></span>
+                </a>
+                <dl class="layui-nav-child">
+                    <dd><a href="javascript:;" id="logout">退出登录</a></dd>
+                </dl>
+            </li>
+        </ul>
+    </div>
+
+    <!-- 左侧导航区域 -->
+    <div class="layui-side layui-bg-black">
+        <div class="layui-side-scroll">
+            <ul class="layui-nav layui-nav-tree">
+                <li class="layui-nav-item {% if request.uri == '/' %}layui-this{% end %}">
+                    <a href="/"><i class="layui-icon layui-icon-camera"></i> 识别答题卡</a>
                 </li>
+                <!-- 改为一级菜单 -->
+                <li class="layui-nav-item {% if request.uri == '/class/manage' %}layui-this{% end %}">
+                    <a href="/class/manage"><i class="layui-icon layui-icon-group"></i> 班级管理</a>
+                </li>
+
+                <li class="layui-nav-item {% if request.uri == '/student/manage' %}layui-this{% end %}">
+                    <a href="/student/manage"><i class="layui-icon layui-icon-form"></i> 学生管理</a>
+                </li>
+
+                <li class="layui-nav-item {% if request.uri == '/exam/manage' %}layui-this{% end %}">
+                    <a href="/exam/manage"><i class="layui-icon layui-icon-form"></i> 考试管理</a>
+                </li>
+
+                <!--?                    <li class="layui-nav-item {% if request.uri.startswith('/class/') or request.uri.startswith('/student/') %}layui-nav-itemed{% end %}">-->
+                <!--?                        <a href="javascript:;"><i class="layui-icon layui-icon-group"></i> 班级管理</a>-->
+                <!--?                        <dl class="layui-nav-child">-->
+                <!--?                            <dd class="{% if request.uri == '/class/manage' %}layui-this{% end %}"><a href="/class/manage">班级列表</a></dd>-->
+                <!--?                            <dd class="{% if request.uri == '/student/manage' %}layui-this{% end %}"><a href="/student/manage">学生列表</a></dd>-->
+                <!--?                        </dl>-->
+                <!--?                    </li>-->
+                <!--?                    <li class="layui-nav-item {% if request.uri.startswith('/exam/') %}layui-nav-itemed{% end %}">-->
+                <!--?                        <a href="javascript:;"><i class="layui-icon layui-icon-form"></i> 考试管理</a>-->
+                <!--?                        <dl class="layui-nav-child">-->
+                <!--?                            <dd class="{% if request.uri == '/exam/manage' %}layui-this{% end %}"><a href="/exam/manage">考试列表</a></dd>-->
+                <!--?                            <dd class="{% if request.uri == '/exam/add' %}layui-this{% end %}"><a href="/exam/add">新建考试</a></dd>-->
+                <!--?                            <dd class="{% if request.uri == '/exam/template' %}layui-this{% end %}"><a href="/exam/template">答题卡模板</a></dd>-->
+                <!--?                            <dd class="{% if request.uri == '/exam/score' %}layui-this{% end %}"><a href="/exam/score">成绩管理</a></dd>-->
+                <!--?                            <dd class="{% if request.uri == '/exam/query' %}layui-this{% end %}"><a href="/exam/query">成绩查询</a></dd>-->
+                <!--?                        </dl>-->
+                <!--?                    </li>-->
             </ul>
-        </div>
-
-        <!-- 左侧导航区域 -->
-        <div class="layui-side layui-bg-black">
-            <div class="layui-side-scroll">
-                <ul class="layui-nav layui-nav-tree">
-                    <li class="layui-nav-item {% if request.uri == '/' %}layui-this{% end %}">
-                        <a href="/"><i class="layui-icon layui-icon-camera"></i> 识别答题卡</a>
-                    </li>
-                    <!-- 改为一级菜单 -->
-                    <li class="layui-nav-item {% if request.uri == '/class/manage' %}layui-this{% end %}">
-                        <a href="/class/manage"><i class="layui-icon layui-icon-group"></i> 班级管理</a>
-                    </li>
-
-                    <li class="layui-nav-item {% if request.uri == '/student/manage' %}layui-this{% end %}">
-                        <a href="/student/manage"><i class="layui-icon layui-icon-form"></i> 学生管理</a>
-                    </li>
-
-                    <li class="layui-nav-item {% if request.uri == '/exam/manage' %}layui-this{% end %}">
-                        <a href="/exam/manage"><i class="layui-icon layui-icon-form"></i> 考试管理</a>
-                    </li>
-
-<!--?                    <li class="layui-nav-item {% if request.uri.startswith('/class/') or request.uri.startswith('/student/') %}layui-nav-itemed{% end %}">-->
-<!--?                        <a href="javascript:;"><i class="layui-icon layui-icon-group"></i> 班级管理</a>-->
-<!--?                        <dl class="layui-nav-child">-->
-<!--?                            <dd class="{% if request.uri == '/class/manage' %}layui-this{% end %}"><a href="/class/manage">班级列表</a></dd>-->
-<!--?                            <dd class="{% if request.uri == '/student/manage' %}layui-this{% end %}"><a href="/student/manage">学生列表</a></dd>-->
-<!--?                        </dl>-->
-<!--?                    </li>-->
-<!--?                    <li class="layui-nav-item {% if request.uri.startswith('/exam/') %}layui-nav-itemed{% end %}">-->
-<!--?                        <a href="javascript:;"><i class="layui-icon layui-icon-form"></i> 考试管理</a>-->
-<!--?                        <dl class="layui-nav-child">-->
-<!--?                            <dd class="{% if request.uri == '/exam/manage' %}layui-this{% end %}"><a href="/exam/manage">考试列表</a></dd>-->
-<!--?                            <dd class="{% if request.uri == '/exam/add' %}layui-this{% end %}"><a href="/exam/add">新建考试</a></dd>-->
-<!--?                            <dd class="{% if request.uri == '/exam/template' %}layui-this{% end %}"><a href="/exam/template">答题卡模板</a></dd>-->
-<!--?                            <dd class="{% if request.uri == '/exam/score' %}layui-this{% end %}"><a href="/exam/score">成绩管理</a></dd>-->
-<!--?                            <dd class="{% if request.uri == '/exam/query' %}layui-this{% end %}"><a href="/exam/query">成绩查询</a></dd>-->
-<!--?                        </dl>-->
-<!--?                    </li>-->
-                </ul>
-            </div>
-        </div>
-
-        <!-- 内容主体区域 -->
-        <div class="layui-body">
-            <div class="layui-container" style="margin-top: 20px;">
-                {% block content %}{% end %}
-            </div>
         </div>
     </div>
 
-    <script>
-        layui.use(['element', 'layer'], function(){
-            var element = layui.element;
-            var layer = layui.layer;
-            
-            // 显示用户名
-            var username = getCookie('user');
-            if(username) {
-                $('#username').text(username);
-            }
-            
-            // 退出登录
-            $('#logout').click(function(){
-                layer.confirm('确定要退出登录吗？', {
-                    btn: ['确定','取消'],
-                    icon: 3,
-                    title: '提示'
-                }, function(index){
-                    deleteCookie('user');
-                    layer.msg('已退出登录', {
-                        icon: 1,
-                        time: 1000,
-                        shade: 0.3,
-                        shadeClose: true
-                    }, function(){
-                        window.location.href = '/login';
-                    });
-                    layer.close(index);
-                });
-            });
+    <!-- 内容主体区域 -->
+    <div class="layui-body">
+        <div class="layui-container" style="margin-top: 20px;">
+            {% block content %}{% end %}
+        </div>
+    </div>
+</div>
 
-            // 初始化导航菜单
-            element.init();
+<script>
+    layui.use(['element', 'layer'], function () {
+        var element = layui.element;
+        var layer = layui.layer;
+
+        // 显示用户名
+        var username = getCookie('user');
+        if (username) {
+            $('#username').text(username);
+        }
+
+        // 退出登录
+        $('#logout').click(function () {
+            layer.confirm('确定要退出登录吗？', {
+                btn: ['确定', '取消'],
+                icon: 3,
+                title: '提示'
+            }, function (index) {
+                deleteCookie('user');
+                layer.msg('已退出登录', {
+                    icon: 1,
+                    time: 1000,
+                    shade: 0.3,
+                    shadeClose: true
+                }, function () {
+                    window.location.href = '/login';
+                });
+                layer.close(index);
+            });
         });
 
-        // Cookie操作函数
-        function getCookie(name) {
-            const value = `; ${document.cookie}`;
-            const parts = value.split(`; ${name}=`);
-            if (parts.length === 2) return parts.pop().split(';').shift();
-            return null;
-        }
-        
-        function deleteCookie(name) {
-            document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
-        }
-    </script>
+        // 初始化导航菜单
+        element.init();
+    });
+
+    // Cookie操作函数
+    function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+        return null;
+    }
+
+    function deleteCookie(name) {
+        document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+    }
+</script>
 </body>
+
 </html> 
